@@ -1,7 +1,10 @@
 import { toPersianChars } from '@persian-tools/persian-tools';
 import { GenderType, MyTypeGender, RateType } from '../types';
 
-const typesOptions = require('../assets/types.json');
+const typesOptions =
+  process.env.NODE_ENV === 'production'
+    ? require('./assets/types.json')
+    : require('../assets/types.json');
 
 export default class Utils {
   public static toPersianCharsText(text: string): string {
