@@ -1,0 +1,42 @@
+{
+  "genderTypeEn": {
+    "1": "Male",
+    "2": "Female",
+    "3": "Both"
+  },
+  "genderTypeFa": {
+    "1": "مرد",
+    "2": "زن",
+    "3": "هر دو"
+  },
+  "genderTypeNumber": {
+    "1": 1,
+    "2": 2,
+    "3": 3
+  },
+  "genderTypeEmoji": {
+    "1": "♂️",
+    "2": "♀️",
+    "3": "♂️♀️"
+  },
+  "genderTypeArb": {
+    "1": "مذکر",
+    "2": "مونت",
+    "3": "هر دو"
+  },
+  "rateTypeNumber": {
+    "1": 1,
+    "2": 2,
+    "3": 3
+  },
+  "rateTypeEn": {
+    "1": "very practical",
+    "2": "normal",
+    "3": "very rare"
+  },
+  "rateTypeFa": {
+    "1": "پر کاربرد",
+    "2": "معمولی",
+    "3": "بسیار نادر"
+  }
+}

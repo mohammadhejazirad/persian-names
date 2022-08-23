@@ -1,0 +1,77 @@
+{
+  "version": "0.1.0",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "engines": {
+    "node": ">=10"
+  },
+  "scripts": {
+    "start": "tsdx watch",
+    "build": "tsdx build",
+    "test": "tsdx test",
+    "lint": "tsdx lint",
+    "prepare": "tsdx build",
+    "size": "size-limit",
+    "analyze": "size-limit --why"
+  },
+  "keywords": [
+    "name",
+    "irani",
+    "iran",
+    "persianName",
+    "persian",
+    "firstName",
+    "persian-names"
+  ],
+  "husky": {
+    "hooks": {
+      "pre-commit": "tsdx lint"
+    }
+  },
+  "prettier": {
+    "printWidth": 80,
+    "semi": true,
+    "singleQuote": true,
+    "trailingComma": "es5"
+  },
+  "name": "persian-names",
+  "author": "MohammadRezaHejaziRad",
+  "module": "dist/persian-names.esm.js",
+  "size-limit": [
+    {
+      "path": "dist/persian-names.cjs.production.min.js",
+      "limit": "10 KB"
+    },
+    {
+      "path": "dist/persian-names.esm.js",
+      "limit": "10 KB"
+    }
+  ],
+  "devDependencies": {
+    "@size-limit/preset-small-lib": "^8.0.1",
+    "@types/sort-array": "^4.1.0",
+    "husky": "^8.0.1",
+    "size-limit": "^8.0.1",
+    "tsdx": "^0.14.1",
+    "tslib": "^2.4.0",
+    "typescript": "^4.7.4"
+  },
+  "dependencies": {
+    "@persian-tools/persian-tools": "^3.4.0",
+    "colors": "^1.4.0",
+    "sort-array": "^4.1.5"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mohammadhejazirad/persian-names"
+  },
+  "bugs": {
+    "url": "https://github.com/mohammadhejazirad/persian-names/issues"
+  },
+  "homepage": "https://github.com/mohammadhejazirad/persian-names"
+}
