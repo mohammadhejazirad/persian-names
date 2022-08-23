@@ -2,7 +2,7 @@ import { toPersianChars } from '@persian-tools/persian-tools';
 import { GenderType, MyTypeGender, RateType } from '../types';
 
 const typesOptions =
-  process.env.NODE_ENV === 'production'
+  process.env.NODE_ENV === 'production' || !process.env.NODE_ENV
     ? require('./assets/types.json')
     : require('../assets/types.json');
 

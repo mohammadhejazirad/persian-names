@@ -67,15 +67,16 @@ const persianName = new PersianNames();
 // });
 // console.log(getGender);
 
-// const includeName = persianName.includeName(
-//   'سلام من رضا هستم به همراه علی و احمد',
-//   {
-//     trimName: false,
-//     myTypeGender: {
-//       male: 'male',
-//       female: 'female',
-//       both: 'both',
-//     },
-//   }
-// );
-// console.log(includeName);
+const includeName = persianName.includeName(
+  'سلام من رضا هستم به همراه علی و احمد',
+  {
+    trimName: false,
+    genderType: 'stringFa',
+    // myTypeGender: {
+    //   male: 'male',
+    //   female: 'female',
+    //   both: 'both',
+    // },
+  }
+);
+console.log(includeName);

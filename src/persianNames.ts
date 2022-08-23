@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import colors from 'colors';
 import sortArray from 'sort-array';
+import * as dotenv from 'dotenv';
 import {
   FindNameOptions,
   FindNamesOptions,
@@ -12,6 +13,7 @@ import {
 } from './types';
 import Utils from './utils/utils';
 
+dotenv.config();
 export class PersianNames {
   private database: Array<any>;
   private defaultJsonData: string = path.join(
