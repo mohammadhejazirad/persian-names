@@ -1,8 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import colors from 'colors';
 import sortArray from 'sort-array';
-import * as dotenv from 'dotenv';
 import {
   FindNameOptions,
   FindNamesOptions,
@@ -13,7 +11,6 @@ import {
 } from './types';
 import Utils from './utils/utils';
 
-dotenv.config();
 export class PersianNames {
   private database: Array<any>;
   private defaultJsonData: string = path.join(
@@ -29,7 +26,7 @@ export class PersianNames {
       !fs.existsSync(pathData || this.defaultJsonData) ||
       path.extname(pathData || this.defaultJsonData) != '.json'
     ) {
-      console.log(colors.white.bgRed('json Data not found'));
+      console.log('json Data not found');
       return process.on('exit', () => {
         process.exit(1);
       });
@@ -42,18 +39,18 @@ export class PersianNames {
       this._checkLengthData(data);
       return data;
     } catch (error) {
-      console.log(colors.red.bgRed(`Error in parsing json file: ${error}`));
+      console.log(`Error in parsing json file: ${error}`);
     }
   }
 
   private _checkLengthData(database?: any): boolean {
     const dataLength = database?.length || this.database?.length;
     if (!dataLength) {
-      console.log(colors.white.bgRed('json Data undefined'));
+      console.log('json Data undefined');
       return false;
     }
     if (dataLength == 0) {
-      console.log(colors.white.bgRed('json Data is empty'));
+      console.log('json Data is empty');
       return false;
     }
     return true;
