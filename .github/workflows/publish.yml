@@ -12,49 +12,29 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  publish:
-    name: Verify and publish
+  build:
+    name: Verify and package
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    environment:
-      name: npm
-      url: https://www.npmjs.com/package/persian-names
     permissions:
       contents: read
-      id-token: write
+    outputs:
+      dist-tag: ${{ steps.release.outputs.dist-tag }}
+      tarball: ${{ steps.package.outputs.tarball }}
 
     steps:
       - name: Check out the release tag
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ github.event.release.tag_name }}
           persist-credentials: false
 
-      - name: Set up Node.js and npm registry
+      - name: Set up Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24
           check-latest: true
-          registry-url: https://registry.npmjs.org
           package-manager-cache: false
-
-      - name: Verify npm supports trusted publishing
-        shell: bash
-        run: |
-          npm_version="$(npm --version)"
-          if [[ ! "$npm_version" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+) ]]; then
-            echo "Cannot parse npm version '$npm_version'." >&2
-            exit 1
-          fi
-
-          npm_major="${BASH_REMATCH[1]}"
-          npm_minor="${BASH_REMATCH[2]}"
-          npm_patch="${BASH_REMATCH[3]}"
-          if (( npm_major < 11 ||
-                (npm_major == 11 && npm_minor < 5) ||
-                (npm_major == 11 && npm_minor == 5 && npm_patch < 1) )); then
-            echo "Trusted publishing requires npm 11.5.1 or newer; found '$npm_version'." >&2
-            exit 1
-          fi
 
       - name: Verify release version
         id: release
@@ -63,9 +43,15 @@ jobs:
           RELEASE_TAG: ${{ github.event.release.tag_name }}
           RELEASE_IS_PRERELEASE: ${{ github.event.release.prerelease }}
         run: |
+          package_name="$(node -p "JSON.parse(require('node:fs').readFileSync('package.json', 'utf8')).name")"
           package_version="$(node -p "JSON.parse(require('node:fs').readFileSync('package.json', 'utf8')).version")"
           lock_version="$(node -p "JSON.parse(require('node:fs').readFileSync('package-lock.json', 'utf8')).packages[''].version")"
           expected_tag="v${package_version}"
+
+          if [[ "$package_name" != "persian-names" ]]; then
+            echo "Refusing to publish unexpected package '$package_name'." >&2
+            exit 1
+          fi
 
           if [[ "$RELEASE_TAG" != "$expected_tag" ]]; then
             echo "Release tag '$RELEASE_TAG' must match package version '$expected_tag'." >&2
@@ -97,7 +83,95 @@ jobs:
       - name: Run release checks
         run: npm run check
 
-      - name: Publish package
+      # Build the exact artifact that will be published before any secret exists.
+      - name: Create release tarball
+        id: package
+        shell: bash
+        run: |
+          pack_metadata="$RUNNER_TEMP/npm-pack.json"
+          npm pack --ignore-scripts --json > "$pack_metadata"
+
+          package_tarball="$(node --input-type=module -e '
+            import { readFileSync } from "node:fs";
+
+            const result = JSON.parse(readFileSync(process.argv[1], "utf8"));
+            const filename = result?.[0]?.filename;
+            if (result.length !== 1 || typeof filename !== "string") {
+              throw new Error("npm pack did not produce exactly one tarball");
+            }
+            process.stdout.write(filename);
+          ' "$pack_metadata")"
+
+          if [[ -z "$package_tarball" ||
+                "$package_tarball" == */* ||
+                "$package_tarball" == *\\* ||
+                ! -f "$package_tarball" ]]; then
+            echo "npm pack produced an invalid tarball path." >&2
+            exit 1
+          fi
+
+          echo "tarball=$package_tarball" >> "$GITHUB_OUTPUT"
+
+      - name: Upload immutable release artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: npm-package
+          path: ${{ steps.package.outputs.tarball }}
+          if-no-files-found: error
+          retention-days: 1
+
+  publish:
+    name: Publish to npm
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # A repository secret is supported; a protected Environment adds an
+    # optional approval gate for publishing.
+    environment:
+      name: npm
+      url: https://www.npmjs.com/package/persian-names
+    permissions:
+      contents: read
+      id-token: write # Required only for npm provenance.
+
+    steps:
+      # This job runs on a fresh runner and never executes repository code.
+      - name: Download verified release artifact
+        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
+        with:
+          name: npm-package
+          path: package
+
+      - name: Set up Node.js and npm registry
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          check-latest: true
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+
+      # Expose the token only to npm publish. --ignore-scripts prevents package
+      # lifecycle scripts from reading it.
+      - name: Publish package with provenance
         env:
-          NPM_DIST_TAG: ${{ steps.release.outputs.dist-tag }}
-        run: npm publish --access public --tag "$NPM_DIST_TAG"
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_DIST_TAG: ${{ needs.build.outputs.dist-tag }}
+          PACKAGE_TARBALL: package/${{ needs.build.outputs.tarball }}
+        shell: bash
+        run: |
+          if [[ -z "${NODE_AUTH_TOKEN:-}" ]]; then
+            echo "NPM_TOKEN is unavailable. Configure it as an Actions secret, never as a variable." >&2
+            exit 1
+          fi
+
+          if [[ ! -f "$PACKAGE_TARBALL" ]]; then
+            echo "The verified package tarball was not downloaded." >&2
+            exit 1
+          fi
+
+          npm publish "$PACKAGE_TARBALL" \
+            --ignore-scripts \
+            --registry https://registry.npmjs.org \
+            --access public \
+            --tag "$NPM_DIST_TAG" \
+            --provenance
