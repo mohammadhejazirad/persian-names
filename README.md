@@ -1,208 +1,251 @@
-# Persian FirstName (JSON) 🇮🇷
+# persian-names
 
-Package of all Iranian (and Arabic) names
+تشخیص سریع جنسیت متداول نام‌های کوچک فارسی و عربی برای JavaScript و
+TypeScript — بدون وابستگی runtime، بدون درخواست شبکه و قابل استفاده در مرورگر
+و سرور.
 
-> پکیج تمامی اسامی ایرانی (و عربی)
+Fast Persian and Arabic first-name gender detection for every modern JavaScript
+runtime.
 
-## Using:
+## ویژگی‌ها
 
-install:
+- API کوچک و ساده: فقط `getGender`
+- شامل **۱۰٬۰۸۸ نام یکتای نرمال‌شده** از ۱۰٬۷۲۲ رکورد منبع
+- خروجی انگلیسی، فارسی، عربی یا عددی
+- پشتیبانی هم‌زمان از ESM، CommonJS و فایل global برای `<script>`
+- قابل استفاده در Node.js، React، Next.js، Vue، Nuxt، Angular، AngularJS،
+  Svelte، Vite، Webpack، Rollup، Bun و Deno
+- lookup با میانگین زمانی `O(1)` و index داخلی lazy
+- حدود ۳۳ KiB برای هر build پس از gzip
+- TypeScript declaration دقیق و بدون هیچ dependency در زمان اجرا
+- اجرا به‌صورت آفلاین؛ نام کاربر به سرور دیگری ارسال نمی‌شود
+
+## نصب
 
 ```bash
 npm install persian-names
 ```
 
 ```bash
-yarn install persian-names
+pnpm add persian-names
 ```
 
-import:
-
-```javascript
-import { PersianNames } from 'persian-names';
+```bash
+yarn add persian-names
 ```
 
-require:
-
-```javascript
-const { PersianNames } = require('persian-names');
+```bash
+bun add persian-names
 ```
 
-new class:
+## شروع سریع
 
-```javascript
-const persianName = new PersianNames(); //using default json file
+```ts
+import { getGender } from 'persian-names';
 
-const persianName = new PersianNames('./assets/firstname.json'); //using custom json
+getGender('علی'); // 'male'
+getGender('زهرا', 'fa'); // 'زن'
+getGender('باران', 'number'); // 3
+getGender('نام ناشناخته'); // null
 ```
 
----
+به ساختن class یا بارگذاری فایل JSON نیازی نیست. دیتاست به‌شکل بهینه داخل build
+قرار گرفته و در Node.js و مرورگر رفتار یکسانی دارد.
 
-## Examples
+## API
 
-Validation Persian Name:
-
-```javascript
-const is_name = persianName.validation('آرش');
-console.log(is_name); //true  or  false
+```ts
+getGender(name, format?)
+getGender(names, format?)
 ```
 
-using options
+پارامتر اول می‌تواند یک نام یا آرایه‌ای readonly از نام‌ها باشد. در حالت آرایه،
+ترتیب و تعداد ورودی‌ها حفظ می‌شود و برای نام‌های ناشناخته `null` برمی‌گردد.
 
-```javascript
-const is_name = persianName.validation('امیر', {
-  convertToPersian: true,
-  typeCheck: 'exact',
-  trimName: true,
-});
-console.log(is_name); //true  or  false
+```ts
+getGender(['علی', 'ناشناخته', 'زهرا'], 'number');
+// [1, null, 2]
 ```
 
-##
+### فرمت خروجی
 
-Get All FirstName:
+| `format` | مرد | زن | قابل استفاده برای هر دو | مقدار پیش‌فرض |
+| --- | --- | --- | --- | --- |
+| `'en'` | `'male'` | `'female'` | `'both'` | بله |
+| `'fa'` | `'مرد'` | `'زن'` | `'هر دو'` | خیر |
+| `'ar'` | `'ذكر'` | `'أنثى'` | `'كلاهما'` | خیر |
+| `'number'` | `1` | `2` | `3` | خیر |
 
-```javascript
-const get_names = persianName.getNames();
-console.log(get_names);
+TypeScript بر اساس مقدار `format` نوع خروجی را دقیق inference می‌کند:
 
-/*
-[
-   { id: 1, name: 'اَبدەَ', gender: 1, rate: 3 },
-   { id: 2, name: 'اَبیش', gender: 1, rate: 3 },
-   ...
-]
-*/
+```ts
+const faGender = getGender('سارا', 'fa');
+// GenderPersian | null
+
+const numericGenders = getGender(['محمد', 'مریم'] as const, 'number');
+// Array<GenderNumber | null>
 ```
 
-using options:
+نوع‌های زیر نیز export شده‌اند:
 
-```javascript
-const get_names = persianName.getNames({
-  genderType: 'stringFa',
-  rateType: 'stringFa',
-  getParamsData: {
-    id: false,
-    name: true,
-    gender: true,
-    rate: true,
-  },
-});
-console.log(get_names);
-/*
-[
-    { name: 'اَبدەَ', gender: 'مرد', rate: 'بسیار نادر' }
-   { name: 'اَبیش', gender: 'مرد', rate: 'بسیار نادر' },
-   ...
-]
-*/
+```ts
+import type {
+  GenderArabic,
+  GenderEnglish,
+  GenderFormat,
+  GenderNumber,
+  GenderPersian,
+  GenderResult,
+} from 'persian-names';
 ```
 
-Find Name:
+## نرمال‌سازی نام
 
-```javascript
-const find_name = persianName.findName('زهرا');
-console.log(find_name);
-// return { id: 2887, name: 'زهرا', gender: 2, rate: 1 }
+نرمال‌سازی امن و خودکار پیش از lookup انجام می‌شود. موارد زیر نتیجه‌ی یکسان دارند:
+
+```ts
+getGender('علی');
+getGender('  عَلي  '); // Arabic Yeh + diacritic
+
+getGender('محمدرضا');
+getGender('محمد رضا');
+getGender('محمد‌رضا'); // نیم‌فاصله
 ```
 
-using options:
+پردازش شامل Unicode NFKC، حذف اعراب و کشیده، یکسان‌سازی `ي/ی` و `ك/ک`،
+اصلاح شکل‌های رایج الف عربی و نادیده گرفتن فاصله، نیم‌فاصله و خط تیره است.
 
-```javascript
-const find_name = persianName.findName('علی', {
-  myTypeGender: {
-    male: 'مردانه',
-  },
-  typeCheck: 'include',
-});
+## استفاده در محیط‌های مختلف
+
+### ESM — React, Next.js, Vue, Nuxt, Angular, Svelte
+
+همه‌ی bundlerهای مدرن می‌توانند مستقیماً named export پکیج را مصرف کنند:
+
+```ts
+import { getGender } from 'persian-names';
+
+const gender = getGender(firstName, 'fa');
 ```
 
-##
+پکیج از APIهای Node.js مانند `fs` استفاده نمی‌کند؛ بنابراین همین import در
+کامپوننت client، SSR و server component قابل استفاده است.
 
-Get Gender Name:
+نمونه‌ی React:
 
-```javascript
-const get_gender_name = persianName.getGenderName('سارا', {
-  genderType: 'stringFa',
-});
-console.log(get_gender_name);
-// return { gender: 'زن' }
-```
+```tsx
+import { useState } from 'react';
+import { getGender } from 'persian-names';
 
-Include Name:
+export function FirstNameField() {
+  const [name, setName] = useState('');
+  const gender = getGender(name, 'fa');
 
-```javascript
-const include_name = persianName.includeName(
-  'سلام من رضا هستم به همراه علی و احمد',
-  {
-    // options
-  }
-);
-console.log(include_name);
-/**  return {
-  originalStr: 'سلام من رضا هستم به همراه علی و احمد',
-  findNamesToStr: 'سلام من "رضا" هستم به همراه "علی" و "احمد"',
-  names: [
-    { id: 634, name: 'احمد', gender: 'male', rate: 1 },
-    { id: 2399, name: 'رضا', gender: 'male', rate: 1 },
-    { id: 3652, name: 'علی', gender: 'male', rate: 1 }
-  ],
-  length: 3
+  return (
+    <>
+      <input value={name} onChange={(event) => setName(event.target.value)} />
+      {gender && <span>{gender}</span>}
+    </>
+  );
 }
-*/
 ```
 
-## options:
+نمونه‌ی Vue/Nuxt:
 
-|   **Options**    |                                  **Description**                                   |                     **type support**                      |   **Default**    |
-| :--------------: | :--------------------------------------------------------------------------------: | :-------------------------------------------------------: | :--------------: |
-| convertToPersian |                         convert alphabet arabic to persian                         |                     boolean,undefined                     |      false       |
-|    typeCheck     |                      include type or exact type for find name                      |                     'exact','include'                     |      exact       |
-|     trimName     | _trim name before validation (remove space and A-Z characters and emojis and ...)_ |                     boolean,undefined                     |      false       |
-|   myTypeGender   |                 _custom gender (male,female,both) show in result_                  |    undefined, male:string, female:string, both:string,    |    undefined     |
-|    genderType    |                           _convert gender name for show_                           | undefined, genderTypeFa, genderTypeNumber, genderTypeArb, | genderTypeNumber |
-|     rateType     |                            _convert rate name for show_                            |           undefined, rateTypeNumber, rateTypeFa           |  rateTypeNumber  |
-|  getParamsData   |                    _items that can be displayed in the output_                     |  undefined, id:bool, name:bool, gender:bool, rate:bool,   |    undefined     |
+```ts
+import { computed, ref } from 'vue';
+import { getGender } from 'persian-names';
 
-#
+const name = ref('');
+const gender = computed(() => getGender(name.value, 'fa'));
+```
 
-Rate Types:
+### CommonJS — Node.js
 
-| **value** | **number** | **stringFa** |
-| :-------: | :--------: | :----------: |
-|     1     |     1      |  پر کاربردی  |
-|     2     |     2      |    معمولی    |
-|     3     |     3      |  بسیار نادر  |
+```js
+const { getGender } = require('persian-names');
 
-Gender Types:
+console.log(getGender('مریم')); // 'female'
+```
 
-| **value** | **Number** | **Fa** | **Arb** |
-| :-------: | :--------: | :----: | :-----: |
-|     1     |     1      |  مرد   |  مذکر   |
-|     2     |     2      |   زن   |  مونث   |
-|     3     |     3      |  هردو  |  هردو   |
+### مرورگر مستقیم و AngularJS
 
-##
+```html
+<script src="https://cdn.jsdelivr.net/npm/persian-names@2/dist/index.global.js"></script>
+<script>
+  const gender = PersianNames.getGender('آرش', 'fa');
+  console.log(gender); // 'مرد'
+</script>
+```
 
-##
+### Deno و Bun
 
-## نکات
+```ts
+// Deno
+import { getGender } from 'npm:persian-names@2';
 
-1- ممکن است یک سری از نام ها در این کتابخانه وجود نداشته باشد. که شما می توانید از طریق این لینک پروژه تبدیل کننده آن را دریافت کنید: [project](https://github.com/mohammadhejazirad/converExcelToSqlite_forLibrary)
-که این پروژه شامل فایل اکسل آماده اسامی + کد های جاوااسکریپت برای تبدیل فایل اکسل به json است.
+// Bun (پس از bun add persian-names)
+// import { getGender } from 'persian-names';
+```
 
-2- بعضی از اسامی مانند حشمت و یا احسان و... هم در مردان و هم در زنان استفاده می شود پس این کتابخانه در جواب آن به شما پاسخ 3 و یا هردو و... میدهد.
+## دیتاست
 
-3-این کتابخانه برای سهولت در توسعه و کار کردن با آن از دیتابیس داخلی یعنی json استفاده می کند.
+فایل فشرده‌ی منبع در زمان build اعتبارسنجی و به index کم‌حجم تبدیل می‌شود.
+پسوندهای مخصوص تفکیک رکورد، املای جایگزین و رکوردهای تکراری در این مرحله پاک‌سازی
+می‌شوند. اگر یک نام هم برای مرد و هم برای زن ثبت شده باشد، خروجی آن `both` است.
 
-4- این کتابخانه تا به الان شامل 6179 عدد نام مرد و زن (عربی و فارسی) است.
+| گروه | تعداد نام یکتا |
+| --- | ---: |
+| فقط مرد | ۴٬۷۳۲ |
+| فقط زن | ۴٬۹۱۸ |
+| هر دو | ۴۳۸ |
+| **مجموع** | **۱۰٬۰۸۸** |
 
-5- نام هایی مثل محمد و محمدرضا و یا محمدمهدی جدا هستند و جدا حساب می شوند.
+نام مرکب یک نام مستقل محسوب می‌شود؛ برای مثال `محمد` و `محمدرضا` دو ورودی جدا
+هستند.
 
----
+## نکته‌ی مهم درباره‌ی تشخیص جنسیت
 
-### مشتاق به دریافت پیشنهادات و نظرات دوستان هستم.
+خروجی این پکیج بیانگر کاربرد متداول یک نام در دیتاست است، نه هویت جنسیتی قطعی
+یک شخص. برای فرم‌های واقعی بهتر است مقدار تشخیص‌داده‌شده قابل اصلاح باشد و از آن
+برای تصمیم‌های حساس یا تبعیض‌آمیز استفاده نشود.
 
-[✉️ email](mailto:hejazi00831@gmail.com) : hejazi00831@gmail.com
+## مهاجرت از نسخه‌ی ۱
 
-[🌐 github](https://github.com/mohammadhejazirad) : https://github.com/mohammadhejazirad
+نسخه‌ی ۲ یک نسخه‌ی major و دارای API ساده‌شده است. class و متدهای عمومی قدیمی
+مانند `validation`، `getNames`، `findName`، `findNames` و `includeName` حذف شده‌اند؛
+زیرا هدف پکیج فقط برگرداندن جنسیت نام است.
+
+```ts
+// v1
+const names = new PersianNames();
+names.getGender('علی', { genderType: 'stringFa' });
+// { gender: 'مرد' }
+
+// v2
+import { getGender } from 'persian-names';
+getGender('علی', 'fa');
+// 'مرد'
+```
+
+برای نام ناشناخته، نسخه‌ی ۲ همیشه `null` می‌دهد و هیچ‌گاه process را متوقف یا در
+console چیزی چاپ نمی‌کند.
+
+## توسعه و کنترل کیفیت
+
+```bash
+npm ci
+npm test
+npm run check
+npm run benchmark
+npm pack --dry-run
+```
+
+`npm run check` علاوه بر تست runtime و type، محدودیت اندازه و صحت exportهای ESM،
+CommonJS و TypeScript را نیز بررسی می‌کند.
+
+برای توسعه و build به Node.js 20 یا جدیدتر نیاز است؛ فایل منتشرشده در Node.js 14
+یا جدیدتر قابل استفاده است.
+
+## مجوز
+
+[MIT](./LICENSE)
