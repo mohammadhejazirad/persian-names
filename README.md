@@ -246,6 +246,32 @@ CommonJS و TypeScript را نیز بررسی می‌کند.
 برای توسعه و build به Node.js 20 یا جدیدتر نیاز است؛ فایل منتشرشده در Node.js 14
 یا جدیدتر قابل استفاده است.
 
+## انتشار نسخه
+
+انتشار روی npm فقط پس از ساختن یک GitHub Release انجام می‌شود. workflow پیش از
+انتشار، تمام کنترل‌های `npm run check` را اجرا می‌کند و یکسان بودن tag ریلیز با
+نسخه‌های `package.json` و `package-lock.json` را بررسی می‌کند. نسخه‌های پایدار با
+dist-tag برابر `latest` و نسخه‌های prerelease با dist-tag برابر `next` منتشر
+می‌شوند.
+
+برای راه‌اندازی اولیه، در تنظیمات پکیج `persian-names` در npm یک
+**Trusted Publisher** از نوع GitHub Actions با مقادیر زیر بسازید:
+
+- Organization or user: `mohammadhejazirad`
+- Repository: `persian-names`
+- Workflow filename: `publish.yml`
+- Environment: `npm`
+- Allowed action: `npm publish`
+
+سپس در GitHub یک Environment به نام `npm` بسازید. برای کنترل بیشتر می‌توان روی
+آن required reviewer و محدودیت deployment tag با الگوی `v*` تنظیم کرد. workflow
+از OIDC و اعتبارنامه‌ی کوتاه‌عمر استفاده می‌کند؛ بنابراین secret دائمی
+`NPM_TOKEN` لازم نیست.
+
+برای انتشار، ابتدا نسخه و changelog را در `main` به‌روزرسانی کنید، tag متناظر
+مانند `v2.0.1` را push کنید و برای همان tag یک GitHub Release بسازید. tag باید
+دقیقاً به‌شکل `v<package-version>` باشد.
+
 ## مجوز
 
 [MIT](./LICENSE)

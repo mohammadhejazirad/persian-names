@@ -1,0 +1,103 @@
+name: Publish to npm
+
+on:
+  release:
+    types: [published]
+
+# Publishing must never need repository write access.
+permissions: {}
+
+concurrency:
+  group: npm-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Verify and publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: npm
+      url: https://www.npmjs.com/package/persian-names
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Check out the release tag
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js and npm registry
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          check-latest: true
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+
+      - name: Verify npm supports trusted publishing
+        shell: bash
+        run: |
+          npm_version="$(npm --version)"
+          if [[ ! "$npm_version" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+) ]]; then
+            echo "Cannot parse npm version '$npm_version'." >&2
+            exit 1
+          fi
+
+          npm_major="${BASH_REMATCH[1]}"
+          npm_minor="${BASH_REMATCH[2]}"
+          npm_patch="${BASH_REMATCH[3]}"
+          if (( npm_major < 11 ||
+                (npm_major == 11 && npm_minor < 5) ||
+                (npm_major == 11 && npm_minor == 5 && npm_patch < 1) )); then
+            echo "Trusted publishing requires npm 11.5.1 or newer; found '$npm_version'." >&2
+            exit 1
+          fi
+
+      - name: Verify release version
+        id: release
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          RELEASE_IS_PRERELEASE: ${{ github.event.release.prerelease }}
+        run: |
+          package_version="$(node -p "JSON.parse(require('node:fs').readFileSync('package.json', 'utf8')).version")"
+          lock_version="$(node -p "JSON.parse(require('node:fs').readFileSync('package-lock.json', 'utf8')).packages[''].version")"
+          expected_tag="v${package_version}"
+
+          if [[ "$RELEASE_TAG" != "$expected_tag" ]]; then
+            echo "Release tag '$RELEASE_TAG' must match package version '$expected_tag'." >&2
+            exit 1
+          fi
+
+          if [[ "$lock_version" != "$package_version" ]]; then
+            echo "package-lock.json version '$lock_version' does not match package.json version '$package_version'." >&2
+            exit 1
+          fi
+
+          if [[ "$package_version" == *-* ]]; then
+            if [[ "$RELEASE_IS_PRERELEASE" != "true" ]]; then
+              echo "Version '$package_version' must be published as a GitHub pre-release." >&2
+              exit 1
+            fi
+            echo "dist-tag=next" >> "$GITHUB_OUTPUT"
+          else
+            if [[ "$RELEASE_IS_PRERELEASE" == "true" ]]; then
+              echo "Stable version '$package_version' cannot be published as a GitHub pre-release." >&2
+              exit 1
+            fi
+            echo "dist-tag=latest" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Run release checks
+        run: npm run check
+
+      - name: Publish package
+        env:
+          NPM_DIST_TAG: ${{ steps.release.outputs.dist-tag }}
+        run: npm publish --access public --tag "$NPM_DIST_TAG"
