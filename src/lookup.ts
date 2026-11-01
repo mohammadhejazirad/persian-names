@@ -76,6 +76,15 @@ function latinKey(value: string): string {
   return value.trim().toLowerCase().replace(/[\s'’_-]+/gu, '');
 }
 
+let listed: NameEntry[] | undefined;
+
+/** Canonical records in dataset order. Built on the first catalog request. */
+export function listNames(): readonly NameEntry[] {
+  if (listed) return listed;
+  listed = [...loadTables().names.values()];
+  return listed;
+}
+
 /** Resolves a Persian-script or Latin spelling to one canonical record. */
 export function findName(input: unknown): NameEntry | null {
   if (typeof input !== 'string' || input.length === 0) return null;

@@ -4,15 +4,15 @@ import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import vm from 'node:vm';
 import { performance } from 'node:perf_hooks';
-import { getGender, getName } from '../dist/index.js';
+import { getEnglish, getGender, getName, getNames, getNationality, isName } from '../dist/index.js';
 import { GOLD } from '../scripts/lib/gold.mjs';
 
 const GENDER = ['', 'male', 'female', 'both'];
 const PERSIAN = {
   persian: 'فارس',
   arabic: 'عرب',
-  turkish: 'ترک',
-  kurdish: 'کرد',
+  turkish: 'تُرک',
+  kurdish: 'کُرد',
   mongolian: 'مغول',
   armenian: 'ارمنی',
   mixed: 'ترکیبی',
@@ -115,7 +115,7 @@ test('normalizes Persian input and accepts a unique Latin spelling', () => {
   assert.equal(getName('ali')?.gender, 'male');
   assert.equal(getName('MOHAMMAD REZA')?.name, 'محمدرضا');
   assert.equal(getGender('Zahra', 'fa'), 'زن');
-  assert.equal(getName('Pasha', 'fa')?.nationality, 'ترک');
+  assert.equal(getName('Pasha', 'fa')?.nationality, 'تُرک');
   assert.equal(getName('ایدین')?.nationality, 'turkish');
   assert.equal(getName('آرش', 'fa')?.nationality, 'فارس');
   assert.equal(getName('Changiz')?.nationality, 'mongolian');
@@ -176,16 +176,64 @@ test('keeps batch order and rejects an unknown format', () => {
   });
 });
 
+test('answers one question without building the rest of the record', () => {
+  assert.equal(isName('علی'), true);
+  assert.equal(isName('  عَلي  '), true);
+  assert.equal(isName('Ali'), true);
+  assert.equal(isName('ناشناخته'), false);
+  assert.equal(isName('Arash'), false);
+  assert.equal(isName(''), false);
+  assert.equal(isName(null), false);
+  assert.deepEqual(isName(['علی', 'ناشناخته', 'روژان']), [true, false, true]);
+
+  assert.equal(getNationality('علی'), 'arabic');
+  assert.equal(getNationality('روژان', 'fa'), 'کُرد');
+  assert.equal(getNationality('Pasha', 'fa'), 'تُرک');
+  assert.equal(getNationality('ناشناخته'), null);
+  assert.deepEqual(getNationality(['علی', 'ناشناخته'], 'number'), [2, null]);
+  assert.throws(() => getNationality('علی', 'invalid'), {
+    name: 'RangeError',
+    message: /Unsupported gender format/,
+  });
+
+  assert.equal(getEnglish('علی'), 'Ali');
+  assert.equal(getEnglish('محمد رضا'), 'Mohammadreza');
+  assert.equal(getEnglish('ناشناخته'), null);
+  assert.deepEqual(getEnglish(['علی', 'ناشناخته']), ['Ali', null]);
+});
+
+test('lists every name only when the whole catalog is requested', () => {
+  const names = getNames();
+  assert.equal(names.length, 10_088);
+  assert.equal(getNames(), names);
+  assert.equal(Object.isFrozen(names), true);
+  assert.deepEqual(
+    names.find((item) => item.name === 'علی'),
+    getName('علی')
+  );
+  assert.equal(getNames('fa').find((item) => item.name === 'روژان')?.nationality, 'کُرد');
+  assert.equal(getNames('fa').find((item) => item.name === 'آیدین')?.nationality, 'تُرک');
+  assert.throws(() => getNames('invalid'), {
+    name: 'RangeError',
+    message: /Unsupported gender format/,
+  });
+});
+
 test('exposes getName from CommonJS and the browser build', async () => {
   const require = createRequire(import.meta.url);
   const commonJs = require('../dist/index.cjs');
   assert.equal(commonJs.getName('چنگیز').nationality, 'mongolian');
+  assert.equal(commonJs.isName('چنگیز'), true);
+  assert.equal(commonJs.getNationality('چنگیز'), 'mongolian');
+  assert.equal(commonJs.getEnglish('چنگیز'), 'Changiz');
 
   const source = await readFile(new URL('../dist/index.global.js', import.meta.url), 'utf8');
   const context = {};
   vm.runInNewContext(source, context);
   assert.equal(context.PersianNames.getName('گارنیک', 'fa').nationality, 'ارمنی');
   assert.equal(context.PersianNames.getGender('زهرا'), 'female');
+  assert.equal(context.PersianNames.isName('زهرا'), true);
+  assert.equal(context.PersianNames.getEnglish('زهرا'), 'Zahra');
 });
 
 test('looks up a hundred thousand names quickly after the index is built', () => {

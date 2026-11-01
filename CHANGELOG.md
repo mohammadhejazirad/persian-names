@@ -17,6 +17,10 @@ All notable changes to this project are documented in this file.
   Codes 1 through 8 are unchanged.
 - Lookup by a unique Latin spelling such as `Ali` or `Mohammad Reza`.
 - Shared ambiguous Latin spellings stay unresolved instead of guessing.
+- `isName` reports whether a spelling is known.
+- `getNationality` returns only the linguistic origin.
+- `getEnglish` returns only the Latin spelling.
+- `getNames` returns the whole catalog, and only when it is called.
 
 ### Changed
 
@@ -28,6 +32,7 @@ All notable changes to this project are documented in this file.
   `ارسلان` and `طغرل` are `turkish`, and `سلدوز` is `mongolian`. A Persian
   letter no longer marks every `ژی` name as Kurdish. The current dataset has
   no name left on `other`.
+- Persian labels for Turkish and Kurdish now carry a damma: `تُرک` and `کُرد`.
 
 ## 2.0.0 - 2026-08-22
 

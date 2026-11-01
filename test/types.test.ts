@@ -1,4 +1,4 @@
-import { getGender, getName } from '../dist/index.js';
+import { getEnglish, getGender, getName, getNames, getNationality, isName } from '../dist/index.js';
 import type {
   GenderArabic,
   GenderEnglish,
@@ -24,8 +24,31 @@ const persianInfo: NameInfo<'fa'> | null = getName('آرش', 'fa');
 const origin: Nationality | undefined = info?.nationality;
 const persianOrigin: NationalityPersian | undefined = persianInfo?.nationality;
 const originCode: NationalityNumber | undefined = getName('علی', 'number')?.nationality;
+const known: boolean = isName('علی');
+const knownBatch: boolean[] = isName(['علی', 'زهرا']);
+const onlyOrigin: Nationality | null = getNationality('علی');
+const persianOnlyOrigin: NationalityPersian | null = getNationality('روژان', 'fa');
+const spelling: string | null = getEnglish('علی');
+const catalog: readonly NameInfo[] = getNames();
+const persianCatalog: readonly NameInfo<'fa'>[] = getNames('fa');
 
-void [english, persian, arabic, numeric, batch, origin, persianOrigin, originCode];
+void [
+  english,
+  persian,
+  arabic,
+  numeric,
+  batch,
+  origin,
+  persianOrigin,
+  originCode,
+  known,
+  knownBatch,
+  onlyOrigin,
+  persianOnlyOrigin,
+  spelling,
+  catalog,
+  persianCatalog,
+];
 
 // @ts-expect-error Unknown formats must be rejected by TypeScript.
 getGender('علی', 'invalid');

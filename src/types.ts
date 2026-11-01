@@ -54,8 +54,8 @@ export type Nationality =
 export type NationalityPersian =
   | 'فارس'
   | 'عرب'
-  | 'ترک'
-  | 'کرد'
+  | 'تُرک'
+  | 'کُرد'
   | 'مغول'
   | 'ارمنی'
   | 'ترکیبی'

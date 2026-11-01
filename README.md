@@ -9,7 +9,12 @@ names.
 
 ## ویژگی‌ها
 
-- `getGender` برای جنسیت و `getName` برای جنسیت، املای لاتین و خاستگاه
+- `isName` فقط می‌گوید نام شناخته‌شده است یا نه
+- `getGender` فقط جنسیت را برمی‌گرداند
+- `getNationality` فقط خاستگاه زبانی را برمی‌گرداند
+- `getEnglish` فقط املای لاتین را برمی‌گرداند
+- `getName` جزئیات یک نام را یکجا برمی‌گرداند
+- `getNames` فقط وقتی صدا زده شود کل فهرست را می‌سازد
 - شامل **۱۰٬۰۸۸ نام یکتای نرمال‌شده** از ۱۰٬۷۲۲ رکورد منبع
 - املای لاتین و خاستگاه زبانی برای تک‌تک نام‌ها
 - خروجی انگلیسی، فارسی، عربی یا عددی
@@ -17,7 +22,7 @@ names.
 - قابل استفاده در Node.js، React، Next.js، Vue، Nuxt، Angular، AngularJS،
   Svelte، Vite، Webpack، Rollup، Bun و Deno
 - lookup با میانگین زمانی `O(1)` و index داخلی lazy
-- باندل ESM حدود ۷۰٫۷ KiB و باندل‌های CommonJS و global حدود ۷۱٫۱ KiB پس از gzip
+- باندل ESM حدود ۷۱٫۰ KiB و باندل‌های CommonJS و global حدود ۷۱٫۴ KiB پس از gzip
 - TypeScript declaration دقیق و بدون هیچ dependency در زمان اجرا
 - اجرا به‌صورت آفلاین؛ نام کاربر به سرور دیگری ارسال نمی‌شود
 
@@ -42,12 +47,17 @@ bun add persian-names
 ## شروع سریع
 
 ```ts
-import { getGender, getName } from 'persian-names';
+import { getEnglish, getGender, getName, getNationality, isName } from 'persian-names';
+
+isName('علی'); // true
+isName('نام ناشناخته'); // false
 
 getGender('علی'); // 'male'
 getGender('زهرا', 'fa'); // 'زن'
 getGender('باران', 'number'); // 3
-getGender('نام ناشناخته'); // null
+
+getNationality('روژان', 'fa'); // 'کُرد'
+getEnglish('علی'); // 'Ali'
 
 getName('آرش', 'fa');
 // { name: 'آرش', english: 'Arash', gender: 'مرد', nationality: 'فارس' }
@@ -56,20 +66,43 @@ getName('آیدین');
 // { name: 'آیدین', english: 'Aydin', gender: 'male', nationality: 'turkish' }
 ```
 
+هر تابع فقط همان چیزی را می‌سازد که اسمش می‌گوید. برای اعتبارسنجی لازم نیست
+جنسیت و خاستگاه را هم بخوانید، و برای جنسیت لازم نیست شیء کامل نام ساخته شود.
+`getNames` فهرست هر ۱۰٬۰۸۸ نام را فقط در صورت فراخوانی می‌سازد و نتیجه‌ی همان
+فرمت را برای دفعه‌ی بعد نگه می‌دارد.
+
 به ساختن class یا بارگذاری فایل JSON نیازی نیست. دیتاست به‌شکل بهینه داخل build
 قرار گرفته و در Node.js و مرورگر رفتار یکسانی دارد.
 
 ## API
 
 ```ts
+isName(name)
+isName(names)
 getGender(name, format?)
 getGender(names, format?)
+getNationality(name, format?)
+getNationality(names, format?)
+getEnglish(name)
+getEnglish(names)
 getName(name, format?)
 getName(names, format?)
+getNames(format?)
 ```
 
-پارامتر اول می‌تواند یک نام یا آرایه‌ای readonly از نام‌ها باشد. در حالت آرایه،
-ترتیب و تعداد ورودی‌ها حفظ می‌شود و برای نام‌های ناشناخته `null` برمی‌گردد.
+| تابع | خروجی | نام ناشناخته |
+| --- | --- | --- |
+| `isName` | `boolean` | `false` |
+| `getGender` | فقط جنسیت | `null` |
+| `getNationality` | فقط خاستگاه | `null` |
+| `getEnglish` | فقط املای لاتین | `null` |
+| `getName` | املای معیار، لاتین، جنسیت و خاستگاه | `null` |
+| `getNames` | آرایه‌ی همه‌ی نام‌ها با همان چهار فیلد | آرایه‌ی کامل |
+
+پارامتر اول، به‌جز `getNames`، می‌تواند یک نام یا آرایه‌ای readonly از نام‌ها
+باشد. در حالت آرایه ترتیب و تعداد ورودی‌ها حفظ می‌شود. `isName` برای عضو
+ناشناخته‌ی آرایه `false` می‌دهد و بقیه‌ی تابع‌ها `null`. ورودی غیررشته، مثل
+`null`، در `isName` برابر `false` و در بقیه برابر `null` است.
 
 ```ts
 getGender(['علی', 'ناشناخته', 'زهرا'], 'number');
@@ -112,7 +145,7 @@ getName(['علی', 'ناشناخته', 'روژان'], 'fa');
 // [
 //   { name: 'علی', english: 'Ali', gender: 'مرد', nationality: 'عرب' },
 //   null,
-//   { name: 'روژان', english: 'Rojan', gender: 'زن', nationality: 'کرد' },
+//   { name: 'روژان', english: 'Rojan', gender: 'زن', nationality: 'کُرد' },
 // ]
 ```
 
@@ -130,8 +163,8 @@ getName(['علی', 'ناشناخته', 'روژان'], 'fa');
 | --- | --- | --- | ---: |
 | `persian` | `فارس` | `فارسي` | `1` |
 | `arabic` | `عرب` | `عربي` | `2` |
-| `turkish` | `ترک` | `تركي` | `3` |
-| `kurdish` | `کرد` | `كردي` | `4` |
+| `turkish` | `تُرک` | `تركي` | `3` |
+| `kurdish` | `کُرد` | `كردي` | `4` |
 | `mongolian` | `مغول` | `مغولي` | `5` |
 | `armenian` | `ارمنی` | `أرمني` | `6` |
 | `mixed` | `ترکیبی` | `مختلط` | `7` |
@@ -280,8 +313,8 @@ import { getGender } from 'npm:persian-names@2';
 | فارس | ۷٬۶۷۵ |
 | عرب | ۱٬۹۸۶ |
 | ترکیبی | ۲۱۱ |
-| ترک | ۶۱ |
-| کرد | ۴۷ |
+| تُرک | ۶۱ |
+| کُرد | ۴۷ |
 | یونانی | ۱۸ |
 | لاتین | ۱۵ |
 | آلمانی | ۱۱ |
@@ -317,21 +350,27 @@ import { getGender } from 'npm:persian-names@2';
 
 ## مهاجرت از نسخه‌ی ۱
 
-نسخه‌ی ۲ یک نسخه‌ی major و دارای API ساده‌شده است. class و متدهای عمومی قدیمی
-مانند `validation`، `getNames`، `findName`، `findNames` و `includeName` حذف شده‌اند؛
-زیرا هدف پکیج فقط برگرداندن جنسیت نام است.
+نسخه‌ی ۲ یک نسخه‌ی major است. class قدیمی و متدهای `validation`، `findName`،
+`findNames` و `includeName` حذف شده‌اند. از ۲٫۱٫۰ همان کارها با تابع‌های جدا
+انجام می‌شود و هر فراخوان فقط خروجی خودش را می‌سازد.
 
 ```ts
 // v1
 const names = new PersianNames();
 names.getGender('علی', { genderType: 'stringFa' });
 // { gender: 'مرد' }
+names.validation('علی');
 
-// v2
-import { getGender } from 'persian-names';
+// v2.1
+import { getGender, isName } from 'persian-names';
 getGender('علی', 'fa');
 // 'مرد'
+isName('علی');
+// true
 ```
+
+`getNames()` در نسخه‌ی ۲٫۱ کل فهرست را با جزئیات برمی‌گرداند. این تابع جایگزین
+class قدیمی نیست و تا وقتی صدا زده نشود فهرستی ساخته نمی‌شود.
 
 برای نام ناشناخته، نسخه‌ی ۲ همیشه `null` می‌دهد و هیچ‌گاه process را متوقف یا در
 console چیزی چاپ نمی‌کند.
@@ -377,6 +416,11 @@ dist-tag برابر `latest` و نسخه‌های prerelease با dist-tag بر�
 برای انتشار، ابتدا نسخه و changelog را در `main` به‌روزرسانی کنید، tag متناظر
 مانند `v2.0.1` را push کنید و برای همان tag یک GitHub Release بسازید. tag باید
 دقیقاً به‌شکل `v<package-version>` باشد.
+
+## توسعه با agentهای کدنویسی
+
+از نسخه‌ی ۲ به بعد، بخشی از توسعه و نوشتن کد این پکیج با agentهای کدنویسی انجام
+شده است. تصمیم‌های API، داده‌ی خاستگاه، تست‌ها و متن منتشرشده بازبینی شده‌اند.
 
 ## مجوز
 
