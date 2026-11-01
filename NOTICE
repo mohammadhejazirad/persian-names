@@ -1,0 +1,15 @@
+persian-names
+Copyright MohammadReza HejaziRad
+
+This package includes Latin spellings derived from the PNGT-26K /
+persian-gender-by-name dataset:
+
+Copyright Farbod Bijary, Mohsen Ebadpour, and Amirhosein Tajbakhsh
+Licensed under the Apache License, Version 2.0.
+https://github.com/farbodbj/persian-gender-by-name
+
+The spellings were normalized, and many conventional Iranian forms were
+corrected in this project. Linguistic origins were classified separately
+and are not taken from that dataset.
+
+A copy of the Apache License, Version 2.0, is in licenses/Apache-2.0.txt.

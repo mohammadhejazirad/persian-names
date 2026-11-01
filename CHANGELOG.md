@@ -2,6 +2,33 @@
 
 All notable changes to this project are documented in this file.
 
+## 2.1.0 - 2026-11-01
+
+### Added
+
+- `getName` returns the canonical spelling, Latin form, gender, and linguistic
+  origin of one name or a batch.
+- A Latin spelling for every name, with a linguistic origin for each one.
+  Origins cover Persian, Arabic, Turkish, Kurdish, Mongolian, Armenian, mixed,
+  Greek, Hebrew, Latin, French, German, Spanish, Italian, English, Russian,
+  Swedish, Finnish, Norse, Phoenician, Syriac, Aramaic, Celtic, Danish, and
+  Sanskrit. `other` stays in the API only as a fallback.
+- Origin labels in English, Persian, and Arabic, plus a stable numeric code.
+  Codes 1 through 8 are unchanged.
+- Lookup by a unique Latin spelling such as `Ali` or `Mohammad Reza`.
+- Shared ambiguous Latin spellings stay unresolved instead of guessing.
+
+### Changed
+
+- `getGender` now accepts a unique Latin spelling in addition to Persian script.
+  Its results for Persian-script input are unchanged.
+- Origin labels follow the linguistic root of the name form. `سارا` is Hebrew,
+  `یلدا` is Syriac, `هانیبال` is Phoenician, and `ژینوس` is French, matching
+  the French label used by Iranian name catalogs. Turkic names such as
+  `ارسلان` and `طغرل` are `turkish`, and `سلدوز` is `mongolian`. A Persian
+  letter no longer marks every `ژی` name as Kurdish. The current dataset has
+  no name left on `other`.
+
 ## 2.0.0 - 2026-08-22
 
 ### Added

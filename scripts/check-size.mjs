@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { gzipSync } from 'node:zlib';
 
-const LIMIT = 45 * 1024;
+const LIMIT = 76 * 1024;
 const files = ['dist/index.js', 'dist/index.cjs', 'dist/index.global.js'];
 let failed = false;
 

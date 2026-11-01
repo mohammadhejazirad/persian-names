@@ -1,7 +1,7 @@
 {
   "name": "persian-names",
-  "version": "2.0.0",
-  "description": "Fast, dependency-free Persian and Arabic first-name gender detection for JavaScript and TypeScript",
+  "version": "2.1.0",
+  "description": "Fast, dependency-free gender, Latin spelling, and linguistic origin for Persian and Arabic first names",
   "license": "MIT",
   "author": "MohammadReza HejaziRad",
   "repository": {
@@ -21,6 +21,9 @@
     "first-name",
     "gender",
     "gender-detection",
+    "transliteration",
+    "nationality",
+    "origin",
     "typescript"
   ],
   "type": "module",
@@ -49,7 +52,9 @@
   },
   "files": [
     "dist",
-    "CHANGELOG.md"
+    "CHANGELOG.md",
+    "NOTICE",
+    "licenses"
   ],
   "sideEffects": false,
   "engines": {

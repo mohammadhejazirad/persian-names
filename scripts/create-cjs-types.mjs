@@ -1,7 +1,7 @@
 import { readFile, rm, writeFile } from 'node:fs/promises';
 
 const DIST = new URL('../dist/', import.meta.url);
-const declarations = ['index.d.ts', 'get-gender.d.ts', 'types.d.ts'];
+const declarations = ['index.d.ts', 'get-gender.d.ts', 'get-name.d.ts', 'types.d.ts'];
 
 await Promise.all(
   declarations.map(async (file) => {
@@ -15,7 +15,7 @@ await Promise.all(
 );
 
 await Promise.all(
-  ['generated-data.d.ts', 'normalize.d.ts'].map((file) =>
+  ['generated-data.d.ts', 'normalize.d.ts', 'lookup.d.ts'].map((file) =>
     rm(new URL(file, DIST), { force: true })
   )
 );
