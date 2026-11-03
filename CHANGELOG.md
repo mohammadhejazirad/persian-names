@@ -26,6 +26,11 @@ All notable changes to this project are documented in this file.
 - Strings longer than 128 characters are rejected before normalization.
 - An unsupported `format` is no longer copied verbatim into the `RangeError`.
 
+### Fixed
+
+- The publish workflow now passes the packed tarball as a local path. `npm publish`
+  was treating `package/<name>.tgz` as a GitHub repository spec.
+
 ## 2.1.0 - 2026-11-01
 
 ### Added

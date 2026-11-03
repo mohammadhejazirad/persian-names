@@ -175,7 +175,8 @@ jobs:
             exit 1
           fi
 
-          npm publish "$PACKAGE_TARBALL" \
+          # A path without ./ is parsed as a GitHub repo spec, not a local tarball.
+          npm publish "./$PACKAGE_TARBALL" \
             --ignore-scripts \
             --registry https://registry.npmjs.org \
             --access public \
