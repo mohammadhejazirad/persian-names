@@ -30,8 +30,6 @@ All notable changes to this project are documented in this file.
 
 - The publish workflow now passes the packed tarball as a local path. `npm publish`
   was treating `package/<name>.tgz` as a GitHub repository spec.
-- Publishing authenticates with the GitHub trusted publisher. The stored
-  `NPM_TOKEN` was not allowed to publish this package.
 
 ## 2.1.0 - 2026-11-01
 
