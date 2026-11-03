@@ -506,8 +506,8 @@ dist-tag برابر `latest` و نسخه‌های prerelease با dist-tag بر�
 
 سپس در GitHub یک Environment به نام `npm` بسازید. برای کنترل بیشتر می‌توان روی
 آن required reviewer و محدودیت deployment tag با الگوی `v*` تنظیم کرد. workflow
-از OIDC و اعتبارنامه‌ی کوتاه‌عمر استفاده می‌کند؛ بنابراین secret دائمی
-`NPM_TOKEN` لازم نیست.
+از OIDC و اعتبارنامه‌ی کوتاه‌عمر استفاده می‌کند. secret دائمی
+`NPM_TOKEN` لازم نیست و اگر در مخزن باشد در انتشار استفاده نمی‌شود.
 
 برای انتشار، ابتدا نسخه و changelog را در `main` به‌روزرسانی کنید، tag متناظر
 مانند `v2.0.1` را push کنید و برای همان tag یک GitHub Release بسازید. tag باید

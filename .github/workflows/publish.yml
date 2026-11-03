@@ -156,24 +156,24 @@ jobs:
           registry-url: https://registry.npmjs.org
           package-manager-cache: false
 
-      # Expose the token only to npm publish. --ignore-scripts prevents package
-      # lifecycle scripts from reading it.
+      # Trusted publishing uses GitHub OIDC. A stored NPM_TOKEN would authenticate
+      # as a different user and hide that identity, so it is removed first.
       - name: Publish package with provenance
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_DIST_TAG: ${{ needs.build.outputs.dist-tag }}
           PACKAGE_TARBALL: package/${{ needs.build.outputs.tarball }}
         shell: bash
         run: |
-          if [[ -z "${NODE_AUTH_TOKEN:-}" ]]; then
-            echo "NPM_TOKEN is unavailable. Configure it as an Actions secret, never as a variable." >&2
-            exit 1
-          fi
-
           if [[ ! -f "$PACKAGE_TARBALL" ]]; then
             echo "The verified package tarball was not downloaded." >&2
             exit 1
           fi
+
+          if [[ -n "${NPM_CONFIG_USERCONFIG:-}" && -f "$NPM_CONFIG_USERCONFIG" ]]; then
+            grep -v '_authToken' "$NPM_CONFIG_USERCONFIG" > "${NPM_CONFIG_USERCONFIG}.clean"
+            mv "${NPM_CONFIG_USERCONFIG}.clean" "$NPM_CONFIG_USERCONFIG"
+          fi
+          unset NODE_AUTH_TOKEN
 
           # A path without ./ is parsed as a GitHub repo spec, not a local tarball.
           npm publish "./$PACKAGE_TARBALL" \
