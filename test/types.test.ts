@@ -1,10 +1,22 @@
-import { getEnglish, getGender, getName, getNames, getNationality, isName } from '../dist/index.js';
+import {
+  countNames,
+  getEnglish,
+  getGender,
+  getName,
+  getNames,
+  getNationality,
+  getTitle,
+  isName,
+  sameName,
+  searchNames,
+} from '../dist/index.js';
 import type {
   GenderArabic,
   GenderEnglish,
   GenderNumber,
   GenderPersian,
   NameInfo,
+  NameTitle,
   Nationality,
   NationalityNumber,
   NationalityPersian,
@@ -31,6 +43,11 @@ const persianOnlyOrigin: NationalityPersian | null = getNationality('روژان'
 const spelling: string | null = getEnglish('علی');
 const catalog: readonly NameInfo[] = getNames();
 const persianCatalog: readonly NameInfo<'fa'>[] = getNames('fa');
+const title: NameTitle | null = getTitle('سیدعلی');
+const titles: Array<NameTitle | null> = getTitle(['سیدعلی', 'زهرا']);
+const same: boolean = sameName('سیدعلی', 'علی');
+const total: number = countNames();
+const suggestions: readonly string[] = searchNames('علی', 5);
 
 void [
   english,
@@ -48,6 +65,11 @@ void [
   spelling,
   catalog,
   persianCatalog,
+  title,
+  titles,
+  same,
+  total,
+  suggestions,
 ];
 
 // @ts-expect-error Unknown formats must be rejected by TypeScript.

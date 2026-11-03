@@ -52,6 +52,18 @@ test('throws a useful error for an unsupported runtime format', () => {
     message: /Unsupported gender format/,
   });
   assert.throws(() => getGender('ناشناخته', 'invalid'), RangeError);
+  const huge = 'x'.repeat(5_000);
+  assert.throws(() => getGender('علی', huge), (error) => {
+    assert.ok(error instanceof RangeError);
+    assert.match(error.message, /Unsupported gender format/);
+    assert.ok(error.message.length < 120);
+    return true;
+  });
+});
+
+test('rejects oversized input instead of scanning it', () => {
+  const huge = `علی${'ا'.repeat(200)}`;
+  assert.equal(getGender(huge), null);
 });
 
 test('supports CommonJS require()', () => {

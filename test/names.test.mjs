@@ -4,7 +4,18 @@ import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import vm from 'node:vm';
 import { performance } from 'node:perf_hooks';
-import { getEnglish, getGender, getName, getNames, getNationality, isName } from '../dist/index.js';
+import {
+  countNames,
+  getEnglish,
+  getGender,
+  getName,
+  getNames,
+  getNationality,
+  getTitle,
+  isName,
+  sameName,
+  searchNames,
+} from '../dist/index.js';
 import { GOLD } from '../scripts/lib/gold.mjs';
 
 const GENDER = ['', 'male', 'female', 'both'];
@@ -202,9 +213,86 @@ test('answers one question without building the rest of the record', () => {
   assert.deepEqual(getEnglish(['علی', 'ناشناخته']), ['Ali', null]);
 });
 
+test('ignores seyed, seyedeh, and sadat without changing the given name', () => {
+  assert.equal(getGender('سیدعلی'), 'male');
+  assert.equal(getGender('سید علی'), 'male');
+  assert.equal(getGender('سيدعلي'), 'male');
+  assert.equal(getGender('سید‌علی'), 'male');
+  assert.equal(getName('سیدمحمد')?.name, 'محمد');
+  assert.equal(getEnglish('سید حسن'), 'Hasan');
+  assert.equal(getNationality('سیدعلی'), 'arabic');
+  assert.equal(getTitle('سیدعلی'), 'seyed');
+
+  assert.equal(getGender('سیده زهرا'), 'female');
+  assert.equal(getGender('سیده‌فاطمه'), 'female');
+  assert.equal(getGender('سيدة مریم'), 'female');
+  assert.equal(getName('سیدهزهرا')?.name, 'زهرا');
+  assert.equal(getTitle('سیده زهرا'), 'seyedeh');
+
+  assert.equal(getGender('سادات مریم'), 'female');
+  assert.equal(getName('زهرا سادات')?.name, 'زهرا');
+  assert.equal(getName('زهراسادات')?.english, 'Zahra');
+  assert.equal(getName('فاطمه‌سادات')?.name, 'فاطمه');
+  assert.equal(getGender('مریم سادات', 'fa'), 'زن');
+  assert.equal(getTitle('زهرا سادات'), 'sadat');
+  assert.equal(getName('سیده زهرا سادات')?.name, 'زهرا');
+  assert.equal(getTitle('سیده زهرا سادات'), 'seyedeh');
+
+  assert.equal(getGender('سیدهعلی'), 'male');
+  assert.equal(getGender('سیدزهرا'), 'female');
+  assert.equal(getTitle('علی'), null);
+  assert.equal(getTitle('سعیده'), null);
+  assert.equal(getName('سعیده')?.english, 'Saeedeh');
+  assert.equal(getName('سیدا')?.name, 'سیدا');
+  assert.equal(getGender('سید'), null);
+  assert.equal(getGender('سیدناشناخته'), null);
+  assert.deepEqual(getTitle(['سیدعلی', 'علی', 'ناشناخته']), ['seyed', null, null]);
+
+  assert.equal(getGender('Seyed Ali'), 'male');
+  assert.equal(getName('Zahra Sadat')?.name, 'زهرا');
+  assert.equal(getTitle('FatemehSadat'), 'sadat');
+  assert.equal(getName('Anahid')?.name, 'آناهید');
+  assert.deepEqual(getName('اناهید'), getName('آناهید'));
+  assert.deepEqual(getName('ارتمیس'), getName('آرتمیس'));
+
+  assert.equal(sameName('سید علی', 'علی'), true);
+  assert.equal(sameName('زهرا سادات', 'سیده زهرا'), true);
+  assert.equal(sameName('  عَلي  ', 'سیدعلی'), true);
+  assert.equal(sameName('علی', 'زهرا'), false);
+  assert.equal(sameName('علی', 'ناشناخته'), false);
+  assert.equal(sameName(null, 'علی'), false);
+});
+
+test('answers catalog questions without changing single-name lookups', () => {
+  const names = getNames();
+  assert.equal(countNames(), names.length);
+  assert.ok(countNames() > 10_088);
+  for (const item of names) {
+    assert.deepEqual(getName(item.name), item);
+    assert.equal(getTitle(item.name), null);
+  }
+
+  assert.deepEqual(searchNames(''), []);
+  assert.deepEqual(searchNames('هلی').filter((name) => name === 'هلیا'), ['هلیا']);
+  const latin = searchNames('ali', 5);
+  assert.equal(latin.length, 5);
+  for (const name of latin) assert.match(getEnglish(name) ?? '', /^ali/iu);
+  assert.equal(searchNames('آ', 1000).length, 50);
+  assert.deepEqual(searchNames('آ', 0), []);
+
+  assert.equal(isName('پوری'), true);
+  assert.equal(getGender('پوری'), 'female');
+  assert.equal(getGender('دری'), 'female');
+  assert.equal(getGender('پاییزه'), 'female');
+  assert.equal(getName('روان')?.gender, 'both');
+  assert.equal(getNationality('سوگول'), 'turkish');
+  assert.equal(getNationality('شیرکو'), 'kurdish');
+  assert.equal(getName('امیرعلیرضا')?.english, 'Amiralireza');
+});
+
 test('lists every name only when the whole catalog is requested', () => {
   const names = getNames();
-  assert.equal(names.length, 10_088);
+  assert.equal(names.length, countNames());
   assert.equal(getNames(), names);
   assert.equal(Object.isFrozen(names), true);
   assert.deepEqual(
@@ -234,6 +322,11 @@ test('exposes getName from CommonJS and the browser build', async () => {
   assert.equal(context.PersianNames.getGender('زهرا'), 'female');
   assert.equal(context.PersianNames.isName('زهرا'), true);
   assert.equal(context.PersianNames.getEnglish('زهرا'), 'Zahra');
+  assert.equal(context.PersianNames.getGender('سیدعلی'), 'male');
+  assert.equal(context.PersianNames.getTitle('سیده زهرا'), 'seyedeh');
+  assert.equal(context.PersianNames.sameName('زهراسادات', 'زهرا'), true);
+  assert.equal(context.PersianNames.countNames(), context.PersianNames.getNames().length);
+  assert.ok(context.PersianNames.searchNames('علی').includes('علی'));
 });
 
 test('looks up a hundred thousand names quickly after the index is built', () => {

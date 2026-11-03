@@ -12,11 +12,20 @@ const ENGLISH_LABELS: readonly GenderEnglish[] = ['male', 'female', 'both'];
 const PERSIAN_LABELS: readonly GenderPersian[] = ['مرد', 'زن', 'هر دو'];
 const ARABIC_LABELS: readonly GenderArabic[] = ['ذكر', 'أنثى', 'كلاهما'];
 
+function formatLabel(format: unknown): string {
+  let label: string;
+  if (typeof format === 'string') label = format;
+  else if (format === null) label = 'null';
+  else if (typeof format === 'symbol') label = 'symbol';
+  else label = typeof format;
+  return label.length > 32 ? `${label.slice(0, 32)}…` : label;
+}
+
 export function assertFormat(format: unknown): asserts format is GenderFormat {
   if (format === 'en' || format === 'fa' || format === 'ar' || format === 'number') return;
 
   throw new RangeError(
-    `Unsupported gender format: ${String(format)}. Use "en", "fa", "ar", or "number".`
+    `Unsupported gender format: ${formatLabel(format)}. Use "en", "fa", "ar", or "number".`
   );
 }
 

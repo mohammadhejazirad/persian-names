@@ -1,6 +1,6 @@
 {
   "name": "persian-names",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Fast, dependency-free gender, Latin spelling, and linguistic origin for Persian and Arabic first names",
   "license": "MIT",
   "author": "MohammadReza HejaziRad",

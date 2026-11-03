@@ -1,6 +1,13 @@
 /** Numeric gender codes kept compatible with persian-names v1. */
 export type GenderNumber = 1 | 2 | 3;
 
+/**
+ * Honorific removed before gender and name detection.
+ * `seyed` is سید, `seyedeh` is سیده, and `sadat` is سادات.
+ * The title does not change the gender of the remaining given name.
+ */
+export type NameTitle = 'seyed' | 'seyedeh' | 'sadat';
+
 export type GenderEnglish = 'male' | 'female' | 'both';
 
 export type GenderPersian = 'مرد' | 'زن' | 'هر دو';

@@ -2,6 +2,30 @@
 
 All notable changes to this project are documented in this file.
 
+## 2.1.1 - 2026-11-03
+
+### Added
+
+- سید، سیده، and سادات are ignored when they sit before or, for the feminine
+  titles, after a known given name. `سیدعلی`, `سیده زهرا`, and `زهرا سادات`
+  resolve to the given name. The title does not change that name's gender.
+  The same applies to the usual Latin forms, such as `Seyed Ali` and
+  `Zahra Sadat`. An exact catalog spelling still wins.
+- `getTitle` reports `seyed`, `seyedeh`, or `sadat` when a title was removed.
+- `sameName` reports whether two spellings are the same given name.
+- `searchNames` returns a short list of canonical names for a Persian or
+  Latin prefix. The list is capped at 50.
+- `countNames` returns the catalog size without building formatted records.
+- 69 attested given names that were missing from the source dataset, including
+  `پوری`, `دری`, `پاییزه`, `سوگول`, and `شیرکو`. Spellings `اناهید` and
+  `ارتمیس` resolve to the existing canonical names `آناهید` and `آرتمیس`.
+  Frequent names already published by سازمان ثبت احوال were already covered.
+
+### Security
+
+- Strings longer than 128 characters are rejected before normalization.
+- An unsupported `format` is no longer copied verbatim into the `RangeError`.
+
 ## 2.1.0 - 2026-11-01
 
 ### Added

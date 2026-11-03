@@ -1,5 +1,6 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { gunzipSync } from 'node:zlib';
+import { ADDITIONS } from './lib/additions.mjs';
 import { englishFor, loadFoldedEnglish } from './lib/english.mjs';
 import { GOLD_BY_NAME } from './lib/gold.mjs';
 import { ORIGIN_CODE, originFor } from './lib/origins.mjs';
@@ -85,9 +86,27 @@ for (const [position, record] of records.entries()) {
   }
 }
 
+const additions = new Map(
+  ADDITIONS.map(([name, english, origin, gender]) => [name, { english, origin, gender }])
+);
+
+for (const [name, info] of additions) {
+  if (genders.has(name)) {
+    throw new RangeError(`Added name already exists in the source dataset: ${name}`);
+  }
+  if (!ALLOWED_NAME.test(name) || name.includes('|')) {
+    throw new TypeError(`Invalid added name: ${name}`);
+  }
+  if (info.gender !== 1 && info.gender !== 2 && info.gender !== 3) {
+    throw new RangeError(`Invalid gender for added name ${name}`);
+  }
+  genders.set(name, info.gender);
+}
+
 const folded = await loadFoldedEnglish();
 const names = new Set(genders.keys());
 const originCounts = new Map();
+const englishOwners = new Map();
 const rows = [];
 
 for (const [name, gender] of genders) {
@@ -95,7 +114,8 @@ for (const [name, gender] of genders) {
     throw new RangeError(`Invalid merged gender for ${name}: ${gender}`);
   }
 
-  const origin = originFor(name);
+  const added = additions.get(name);
+  const origin = added ? added.origin : originFor(name);
   const code = ORIGIN_CODE[origin];
   if (!code) throw new RangeError(`Invalid origin for ${name}: ${origin}`);
 
@@ -107,7 +127,7 @@ for (const [name, gender] of genders) {
     throw new RangeError(`Gender mismatch for ${name}: ${gender}, expected ${expected.gender}`);
   }
 
-  const english = englishFor(name, names, folded);
+  const english = added ? added.english : englishFor(name, names, folded);
   if (expected && expected.english !== english) {
     throw new RangeError(`English mismatch for ${name}: ${english}, expected ${expected.english}`);
   }
@@ -117,6 +137,13 @@ for (const [name, gender] of genders) {
   if (consonantRun(english) >= 4) {
     throw new RangeError(`English spelling for ${name} is missing vowels: ${english}`);
   }
+
+  const englishKey = english.toLowerCase();
+  const englishOwner = englishOwners.get(englishKey);
+  if (englishOwner && englishOwner !== name && (added || additions.has(englishOwner))) {
+    throw new RangeError(`Latin spelling ${english} is shared by ${englishOwner} and ${name}`);
+  }
+  if (!englishOwner) englishOwners.set(englishKey, name);
 
   originCounts.set(origin, (originCounts.get(origin) ?? 0) + 1);
   rows.push(`${name}\t${english}\t${gender}${code}`);

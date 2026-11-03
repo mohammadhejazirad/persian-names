@@ -1,3 +1,5 @@
+import { ADDITIONS } from './additions.mjs';
+
 /**
  * Names whose Latin spelling and linguistic origin are locked.
  * Gender codes match the source dataset: 1 male, 2 female, 3 both.
@@ -255,6 +257,7 @@ export const GOLD = [
   ['شاهقلی', 'Shahgholi', 'mixed', 1],
   ['امامقلی', 'Emamgholi', 'mixed', 1],
   ['علیداد', 'Alidad', 'mixed', 1],
+  ...ADDITIONS,
 ];
 
 /** @type {Map<string, { english: string, origin: string, gender: 1 | 2 | 3 }>} */

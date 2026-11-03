@@ -3,12 +3,16 @@ import { readFile, rm, writeFile } from 'node:fs/promises';
 const DIST = new URL('../dist/', import.meta.url);
 const declarations = [
   'index.d.ts',
+  'count-names.d.ts',
   'get-english.d.ts',
   'get-gender.d.ts',
   'get-name.d.ts',
   'get-names.d.ts',
   'get-nationality.d.ts',
+  'get-title.d.ts',
   'is-name.d.ts',
+  'same-name.d.ts',
+  'search-names.d.ts',
   'types.d.ts',
 ];
 
